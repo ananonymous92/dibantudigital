@@ -2,8 +2,8 @@
 
 import { useActionState } from "react";
 import { registerAction, type FormState } from "@/app/actions/auth";
-import { Alert, FieldError, Input, Label } from "@/components/ui";
 import { SubmitButton } from "@/components/submit-button";
+import { Alert, FieldError, Input, Label } from "@/components/ui";
 
 export function RegisterForm() {
   const [state, action] = useActionState<FormState, FormData>(registerAction, {});
@@ -52,11 +52,10 @@ export function RegisterForm() {
         />
         <FieldError messages={fe.password} />
       </div>
-      <SubmitButton className="w-full">Buat akun</SubmitButton>
+      <SubmitButton className="w-full">Buat akun &amp; Verifikasi Email</SubmitButton>
       <p className="text-center text-xs text-slate-500">
-        Dengan mendaftar, Anda menyetujui Syarat Layanan dan Kebijakan Privasi DibantuDigital.
+        Kami akan mengirimkan kode verifikasi 6 digit ke alamat email Anda.
       </p>
     </form>
   );
 }
-

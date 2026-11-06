@@ -22,6 +22,10 @@ export type WorkspaceContext = {
 export const requireWorkspace = cache(async (): Promise<WorkspaceContext> => {
   const session = await requireSession();
 
+  if (!session.user.emailVerifiedAt) {
+    redirect("/verify-email");
+  }
+
   const memberships = await db()
     .select({ workspace: schema.workspaces, role: schema.workspaceMembers.role })
     .from(schema.workspaceMembers)

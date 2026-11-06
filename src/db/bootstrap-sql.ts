@@ -20,16 +20,43 @@ DO $$ BEGIN
   CREATE TYPE data_source AS ENUM ('meta_api', 'import');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
+DO $$ BEGIN
+  CREATE TYPE auth_token_type AS ENUM ('email_verify', 'password_reset');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
 CREATE TABLE IF NOT EXISTS users (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
   email text NOT NULL UNIQUE,
-  password_hash text NOT NULL,
+  password_hash text NOT NULL DEFAULT '',
+  google_id text UNIQUE,
   email_verified_at timestamptz,
   is_platform_admin boolean NOT NULL DEFAULT false,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id text UNIQUE;
+ALTER TABLE users ALTER COLUMN password_hash SET DEFAULT '';
+
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'auth_tokens') THEN
+    UPDATE users SET email_verified_at = created_at WHERE email_verified_at IS NULL;
+  END IF;
+END $$;
+
+CREATE TABLE IF NOT EXISTS auth_tokens (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  type auth_token_type NOT NULL,
+  token_hash text NOT NULL UNIQUE,
+  code_hash text,
+  expires_at timestamptz NOT NULL,
+  used_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS auth_tokens_user_idx ON auth_tokens(user_id, type);
 
 CREATE TABLE IF NOT EXISTS workspaces (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

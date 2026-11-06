@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { GoogleAuthButton } from "@/components/google-auth-button";
 import { RegisterForm } from "./register-form";
 
 export const metadata: Metadata = { title: "Daftar" };
@@ -14,10 +15,10 @@ export default function RegisterPage() {
           Masuk
         </Link>
       </p>
-      <div className="mt-8">
+      <div className="mt-8 space-y-5">
+        <GoogleAuthButton label="Daftar dengan Google" />
         <RegisterForm />
       </div>
     </>
   );
 }
-

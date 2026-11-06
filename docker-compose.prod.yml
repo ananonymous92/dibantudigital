@@ -35,8 +35,9 @@ services:
       NODE_ENV: production
       DATABASE_URL: postgres://${POSTGRES_USER:-dibantu}:${POSTGRES_PASSWORD:-dibantu}@postgres:5432/${POSTGRES_DB:-dibantudigital}
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3010:3000"
     command: ["sh", "-c", "npm run db:seed && npm start"]
 
 volumes:
   pgdata:
+

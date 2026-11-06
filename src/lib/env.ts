@@ -14,6 +14,16 @@ const EnvSchema = z.object({
    * so a leaked access token cannot be used from outside this server.
    */
   META_APP_SECRET: z.string().optional().default(""),
+  /** Google OAuth 2.0 Client credentials (console.cloud.google.com). */
+  GOOGLE_CLIENT_ID: z.string().optional().default(""),
+  GOOGLE_CLIENT_SECRET: z.string().optional().default(""),
+  /** Email delivery via Resend API (https://resend.com) or standard SMTP. */
+  RESEND_API_KEY: z.string().optional().default(""),
+  SMTP_HOST: z.string().optional().default(""),
+  SMTP_PORT: z.coerce.number().int().positive().default(587),
+  SMTP_USER: z.string().optional().default(""),
+  SMTP_PASS: z.string().optional().default(""),
+  SMTP_FROM: z.string().optional().default("DibantuDigital <noreply@dibantudigital.id>"),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

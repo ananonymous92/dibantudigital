@@ -38,6 +38,7 @@ export const subscriptionStatus = pgEnum("subscription_status", [
 ]);
 export const invoiceStatus = pgEnum("invoice_status", ["pending", "paid", "expired", "failed"]);
 export const dataSource = pgEnum("data_source", ["meta_api", "import"]);
+export const authTokenType = pgEnum("auth_token_type", ["email_verify", "password_reset"]);
 
 /* ----------------------------------------------------------------------------
  * Identity & tenancy
@@ -47,11 +48,30 @@ export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(), // always stored lowercase
-  passwordHash: text("password_hash").notNull(),
+  passwordHash: text("password_hash").notNull().default(""),
+  googleId: text("google_id").unique(),
   emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
   isPlatformAdmin: boolean("is_platform_admin").notNull().default(false),
   ...timestamps,
 });
+
+/** Single-use tokens for email verification and password reset (stored hashed). */
+export const authTokens = pgTable(
+  "auth_tokens",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    type: authTokenType("type").notNull(),
+    tokenHash: text("token_hash").notNull().unique(),
+    codeHash: text("code_hash"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    usedAt: timestamp("used_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("auth_tokens_user_idx").on(t.userId, t.type)],
+);
 
 /** Login sessions. `id` is the SHA-256 hash of the cookie token, never the raw token. */
 export const sessions = pgTable(

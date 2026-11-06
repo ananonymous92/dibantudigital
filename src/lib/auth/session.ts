@@ -54,7 +54,13 @@ export async function destroySession() {
 export type SessionUser = {
   sessionId: string;
   activeWorkspaceId: string | null;
-  user: { id: string; name: string; email: string; isPlatformAdmin: boolean };
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    emailVerifiedAt: Date | null;
+    isPlatformAdmin: boolean;
+  };
 };
 
 /** Resolve the logged-in user from the session cookie. Memoised per request. */
@@ -74,6 +80,7 @@ export const getSession = cache(async (): Promise<SessionUser | null> => {
         userId: schema.users.id,
         name: schema.users.name,
         email: schema.users.email,
+        emailVerifiedAt: schema.users.emailVerifiedAt,
         isPlatformAdmin: schema.users.isPlatformAdmin,
       })
       .from(schema.sessions)
@@ -94,7 +101,13 @@ export const getSession = cache(async (): Promise<SessionUser | null> => {
   return {
     sessionId: row.sessionId,
     activeWorkspaceId: row.activeWorkspaceId,
-    user: { id: row.userId, name: row.name, email: row.email, isPlatformAdmin: row.isPlatformAdmin },
+    user: {
+      id: row.userId,
+      name: row.name,
+      email: row.email,
+      emailVerifiedAt: row.emailVerifiedAt,
+      isPlatformAdmin: row.isPlatformAdmin,
+    },
   };
 });
 

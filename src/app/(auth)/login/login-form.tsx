@@ -1,9 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { loginAction, type FormState } from "@/app/actions/auth";
-import { Alert, FieldError, Input, Label } from "@/components/ui";
 import { SubmitButton } from "@/components/submit-button";
+import { Alert, FieldError, Input, Label } from "@/components/ui";
 
 export function LoginForm() {
   const [state, action] = useActionState<FormState, FormData>(loginAction, {});
@@ -25,7 +26,17 @@ export function LoginForm() {
         <FieldError messages={state.fieldErrors?.email} />
       </div>
       <div>
-        <Label htmlFor="password">Password</Label>
+        <div className="mb-1.5 flex items-center justify-between">
+          <Label htmlFor="password" className="mb-0">
+            Password
+          </Label>
+          <Link
+            href="/forgot-password"
+            className="text-xs font-semibold text-brand-600 hover:underline"
+          >
+            Lupa password?
+          </Link>
+        </div>
         <Input
           id="password"
           name="password"
@@ -40,4 +51,3 @@ export function LoginForm() {
     </form>
   );
 }
-

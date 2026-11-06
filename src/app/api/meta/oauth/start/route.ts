@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { env } from "@/lib/env";
 import { buildMetaOAuthDialogUrl } from "@/lib/meta-api";
 import { requireWorkspace } from "@/lib/tenant";
+import { getPublicBaseUrl } from "@/lib/url";
 
 export const OAUTH_STATE_COOKIE = "dd_meta_oauth_state";
 
@@ -14,29 +15,30 @@ export const OAUTH_STATE_COOKIE = "dd_meta_oauth_state";
  */
 export async function GET() {
   const ctx = await requireWorkspace();
-  const { APP_URL, META_APP_ID, META_APP_SECRET, NODE_ENV } = env();
+  const { META_APP_ID, META_APP_SECRET } = env();
+  const baseUrl = await getPublicBaseUrl();
 
   if (ctx.role !== "owner" && ctx.role !== "admin") {
     return NextResponse.redirect(
-      new URL("/app/connections?oauth_error=forbidden", APP_URL),
+      new URL("/app/connections?oauth_error=forbidden", baseUrl),
     );
   }
 
   if (!META_APP_ID || !META_APP_SECRET) {
     return NextResponse.redirect(
-      new URL("/app/connections?oauth_error=missing_app_config", APP_URL),
+      new URL("/app/connections?oauth_error=missing_app_config", baseUrl),
     );
   }
 
   const nonce = randomBytes(24).toString("hex");
   const state = `${ctx.workspace.id}.${nonce}`;
-  const redirectUri = `${APP_URL.replace(/\/$/, "")}/api/meta/oauth/callback`;
+  const redirectUri = `${baseUrl}/api/meta/oauth/callback`;
 
   const cookieStore = await cookies();
   cookieStore.set(OAUTH_STATE_COOKIE, state, {
     httpOnly: true,
     sameSite: "lax",
-    secure: NODE_ENV === "production",
+    secure: baseUrl.startsWith("https://"),
     path: "/",
     maxAge: 600, // 10 minutes
   });
@@ -44,4 +46,3 @@ export async function GET() {
   const dialogUrl = buildMetaOAuthDialogUrl({ redirectUri, state });
   return NextResponse.redirect(dialogUrl);
 }
-

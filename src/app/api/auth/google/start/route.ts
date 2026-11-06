@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { env } from "@/lib/env";
+import { getPublicBaseUrl } from "@/lib/url";
 
 export const GOOGLE_OAUTH_STATE_COOKIE = "dd_google_oauth_state";
 
@@ -10,8 +11,8 @@ export const GOOGLE_OAUTH_STATE_COOKIE = "dd_google_oauth_state";
  * Redirects to Google's authorization endpoint with a CSRF state cookie.
  */
 export async function GET() {
-  const { APP_URL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, NODE_ENV } = env();
-  const baseUrl = APP_URL.replace(/\/$/, "");
+  const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } = env();
+  const baseUrl = await getPublicBaseUrl();
 
   if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
     return NextResponse.redirect(
@@ -26,7 +27,7 @@ export async function GET() {
   cookieStore.set(GOOGLE_OAUTH_STATE_COOKIE, state, {
     httpOnly: true,
     sameSite: "lax",
-    secure: NODE_ENV === "production",
+    secure: baseUrl.startsWith("https://"),
     path: "/",
     maxAge: 600, // 10 minutes
   });
@@ -41,4 +42,3 @@ export async function GET() {
 
   return NextResponse.redirect(url.toString());
 }
-

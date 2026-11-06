@@ -28,7 +28,7 @@ export function GoogleAuthButton({ label = "Lanjutkan dengan Google" }: { label?
 
       <div className="relative flex items-center justify-center">
         <div className="w-full border-t border-slate-200" />
-        <span className="bg-white px-3 text-xs font-medium uppercase tracking-wider text-slate-400">
+        <span className="shrink-0 whitespace-nowrap bg-white px-3 text-xs font-medium uppercase tracking-wider text-slate-400">
           atau dengan email
         </span>
         <div className="w-full border-t border-slate-200" />

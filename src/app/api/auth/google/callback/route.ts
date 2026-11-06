@@ -4,6 +4,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { db, schema } from "@/db";
 import { createSession } from "@/lib/auth/session";
 import { env } from "@/lib/env";
+import { getPublicBaseUrl } from "@/lib/url";
 import { GOOGLE_OAUTH_STATE_COOKIE } from "../start/route";
 
 type GoogleTokenResponse = {
@@ -29,8 +30,8 @@ type GoogleUserInfo = {
  * - Starts session and routes first-time users to /onboarding to name their brand
  */
 export async function GET(request: NextRequest) {
-  const { APP_URL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } = env();
-  const baseUrl = APP_URL.replace(/\/$/, "");
+  const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } = env();
+  const baseUrl = await getPublicBaseUrl();
   const loginRedirect = (query: string) =>
     NextResponse.redirect(new URL(`/login?${query}`, baseUrl));
 
@@ -152,4 +153,3 @@ export async function GET(request: NextRequest) {
     return loginRedirect("oauth_error=google_server_error");
   }
 }
-

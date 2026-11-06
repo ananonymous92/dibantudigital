@@ -2,9 +2,9 @@ import { cookies } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
 import { db, schema } from "@/db";
 import { encryptSecret } from "@/lib/crypto";
-import { env } from "@/lib/env";
 import { exchangeMetaOAuthCode, redactTokens } from "@/lib/meta-api";
 import { requireWorkspace } from "@/lib/tenant";
+import { getPublicBaseUrl } from "@/lib/url";
 import { OAUTH_STATE_COOKIE } from "../start/route";
 
 /**
@@ -15,9 +15,9 @@ import { OAUTH_STATE_COOKIE } from "../start/route";
  */
 export async function GET(request: NextRequest) {
   const ctx = await requireWorkspace();
-  const { APP_URL } = env();
+  const baseUrl = await getPublicBaseUrl();
   const baseRedirect = (query: string) =>
-    NextResponse.redirect(new URL(`/app/connections?${query}`, APP_URL));
+    NextResponse.redirect(new URL(`/app/connections?${query}`, baseUrl));
 
   if (ctx.role !== "owner" && ctx.role !== "admin") {
     return baseRedirect("oauth_error=forbidden");
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const redirectUri = `${APP_URL.replace(/\/$/, "")}/api/meta/oauth/callback`;
+    const redirectUri = `${baseUrl}/api/meta/oauth/callback`;
     const result = await exchangeMetaOAuthCode({ code, redirectUri });
 
     if (result.adAccounts.length === 0) {
@@ -89,4 +89,3 @@ export async function GET(request: NextRequest) {
     return baseRedirect(`oauth_error=${encodeURIComponent(msg)}`);
   }
 }
-

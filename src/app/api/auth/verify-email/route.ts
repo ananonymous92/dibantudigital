@@ -3,14 +3,14 @@ import { type NextRequest, NextResponse } from "next/server";
 import { db, schema } from "@/db";
 import { createSession, getSession } from "@/lib/auth/session";
 import { verifyEmailWithToken } from "@/lib/auth/tokens";
-import { env } from "@/lib/env";
+import { getPublicBaseUrl } from "@/lib/url";
 
 /**
  * Handles clicking the verification link in the user's email:
  * GET /api/auth/verify-email?token=...
  */
 export async function GET(request: NextRequest) {
-  const baseUrl = env().APP_URL.replace(/\/$/, "");
+  const baseUrl = await getPublicBaseUrl();
   const token = request.nextUrl.searchParams.get("token") ?? "";
 
   if (!token) {
@@ -35,4 +35,3 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.redirect(new URL("/app?verified=1", baseUrl));
 }
-

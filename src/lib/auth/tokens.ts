@@ -3,7 +3,7 @@ import { createHash, randomBytes, randomInt } from "node:crypto";
 import { and, desc, eq, gt, isNull } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { buildPasswordResetEmail, buildVerificationEmail, sendEmail } from "@/lib/email";
-import { env } from "@/lib/env";
+import { getPublicBaseUrl } from "@/lib/url";
 
 const VERIFY_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 const RESET_TTL_MS = 60 * 60 * 1000; // 1 hour
@@ -51,7 +51,7 @@ export async function issueEmailVerificationToken(params: {
       expiresAt,
     });
 
-  const baseUrl = env().APP_URL.replace(/\/$/, "");
+  const baseUrl = await getPublicBaseUrl();
   const verifyUrl = `${baseUrl}/api/auth/verify-email?token=${encodeURIComponent(rawToken)}`;
   const emailPayload = buildVerificationEmail({ name: params.name, code, verifyUrl });
   const result = await sendEmail({ to: params.email, ...emailPayload });
@@ -145,7 +145,7 @@ export async function issuePasswordResetToken(params: {
       expiresAt,
     });
 
-  const baseUrl = env().APP_URL.replace(/\/$/, "");
+  const baseUrl = await getPublicBaseUrl();
   const resetUrl = `${baseUrl}/reset-password?token=${encodeURIComponent(rawToken)}`;
   const emailPayload = buildPasswordResetEmail({ name: params.name, resetUrl });
   const result = await sendEmail({ to: params.email, ...emailPayload });

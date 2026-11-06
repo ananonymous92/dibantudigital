@@ -36,7 +36,7 @@ Aplikasi web SaaS komersial (multi-tenant) untuk pelaporan Meta Ads otomatis, me
 
 1. **Clone repository dari GitHub di VPS:**
    ```bash
-   git clone <URL_REPO_GITHUB_ANDA> dibantudigital
+   git clone https://github.com/ananonymous92/dibantudigital.git dibantudigital
    cd dibantudigital
    ```
 2. **Siapkan file `.env` production:**

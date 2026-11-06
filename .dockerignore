@@ -1,0 +1,10 @@
+node_modules
+.next
+.git
+.gitignore
+.local-pgdata
+.env
+.env.local
+npm-debug.log*
+coverage
+*.tsbuildinfo

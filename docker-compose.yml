@@ -1,0 +1,20 @@
+# Development database for DibantuDigital.
+# Start:  docker compose up -d
+# Stop:   docker compose down
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: dibantudigital-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dibantu
+      POSTGRES_PASSWORD: dibantu
+      POSTGRES_DB: dibantudigital
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
+

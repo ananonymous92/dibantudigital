@@ -1,0 +1,42 @@
+# Production Docker Compose stack for VPS deployment (App + PostgreSQL 17).
+# Usage on VPS:
+#   cp .env.example .env   # then edit APP_URL, ENCRYPTION_KEY, POSTGRES_PASSWORD
+#   docker compose -f docker-compose.prod.yml up -d --build
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: dibantudigital-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-dibantu}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dibantu}
+      POSTGRES_DB: ${POSTGRES_DB:-dibantudigital}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dibantu} -d ${POSTGRES_DB:-dibantudigital}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dibantudigital-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://${POSTGRES_USER:-dibantu}:${POSTGRES_PASSWORD:-dibantu}@postgres:5432/${POSTGRES_DB:-dibantudigital}
+    ports:
+      - "3000:3000"
+    command: ["sh", "-c", "npm run db:seed && npm start"]
+
+volumes:
+  pgdata:

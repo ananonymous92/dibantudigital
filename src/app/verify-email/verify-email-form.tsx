@@ -9,7 +9,7 @@ import {
 import { SubmitButton } from "@/components/submit-button";
 import { Alert, Input, Label } from "@/components/ui";
 
-export function VerifyEmailForm() {
+export function VerifyEmailForm({ defaultCode }: { defaultCode?: string }) {
   const [verifyState, verifyAction] = useActionState<FormState, FormData>(verifyEmailCodeAction, {});
   const [resendState, resendAction] = useActionState<FormState, FormData>(
     resendVerificationEmailAction,
@@ -32,6 +32,7 @@ export function VerifyEmailForm() {
             inputMode="numeric"
             pattern="[0-9]{6}"
             maxLength={6}
+            defaultValue={defaultCode}
             placeholder="123456"
             className="text-center text-xl font-bold tracking-[0.4em]"
             required

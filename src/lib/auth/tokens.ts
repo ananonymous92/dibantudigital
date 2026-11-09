@@ -1,8 +1,9 @@
 import "server-only";
-import { createHash, randomBytes, randomInt } from "node:crypto";
+import { createHash, createHmac, randomBytes } from "node:crypto";
 import { and, desc, eq, gt, isNull } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { buildPasswordResetEmail, buildVerificationEmail, sendEmail } from "@/lib/email";
+import { env } from "@/lib/env";
 import { getPublicBaseUrl } from "@/lib/url";
 
 const VERIFY_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -11,6 +12,35 @@ const RESEND_COOLDOWN_MS = 45 * 1000; // 45 seconds cooldown between resends
 
 export function hashAuthToken(raw: string): string {
   return createHash("sha256").update(raw.trim()).digest("hex");
+}
+
+function deriveOtpCode(userId: string, createdAtMs: number): string {
+  const secret = env().ENCRYPTION_KEY || "dibantudigital-otp-secret";
+  const digest = createHmac("sha256", secret)
+    .update(`${userId}:${createdAtMs}`)
+    .digest();
+  const num = (digest.readUInt32BE(0) % 900_000) + 100_000;
+  return String(num);
+}
+
+export async function getActiveVerificationCodeForPreview(userId: string): Promise<string | null> {
+  const now = new Date();
+  const rows = await db()
+    .select({ createdAt: schema.authTokens.createdAt })
+    .from(schema.authTokens)
+    .where(
+      and(
+        eq(schema.authTokens.userId, userId),
+        eq(schema.authTokens.type, "email_verify"),
+        isNull(schema.authTokens.usedAt),
+        gt(schema.authTokens.expiresAt, now),
+      ),
+    )
+    .orderBy(desc(schema.authTokens.createdAt))
+    .limit(1);
+
+  if (!rows[0]) return null;
+  return deriveOtpCode(userId, rows[0].createdAt.getTime());
 }
 
 export async function canSendAuthToken(
@@ -38,8 +68,9 @@ export async function issueEmailVerificationToken(params: {
   email: string;
 }): Promise<{ sent: boolean; code: string }> {
   const rawToken = randomBytes(32).toString("hex");
-  const code = String(randomInt(100_000, 1_000_000));
-  const expiresAt = new Date(Date.now() + VERIFY_TTL_MS);
+  const createdAt = new Date();
+  const code = deriveOtpCode(params.userId, createdAt.getTime());
+  const expiresAt = new Date(createdAt.getTime() + VERIFY_TTL_MS);
 
   await db()
     .insert(schema.authTokens)
@@ -49,6 +80,7 @@ export async function issueEmailVerificationToken(params: {
       tokenHash: hashAuthToken(rawToken),
       codeHash: hashAuthToken(code),
       expiresAt,
+      createdAt,
     });
 
   const baseUrl = await getPublicBaseUrl();
@@ -179,4 +211,3 @@ export async function findValidPasswordResetToken(rawToken: string) {
 
   return rows[0] ?? null;
 }
-

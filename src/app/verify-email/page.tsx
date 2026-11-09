@@ -4,6 +4,7 @@ import { logoutAction } from "@/app/actions/auth";
 import { Logo } from "@/components/logo";
 import { Alert } from "@/components/ui";
 import { requireSession } from "@/lib/auth/session";
+import { getActiveVerificationCodeForPreview, issueEmailVerificationToken } from "@/lib/auth/tokens";
 import { isEmailConfigured } from "@/lib/email";
 import { VerifyEmailForm } from "./verify-email-form";
 
@@ -21,6 +22,19 @@ export default async function VerifyEmailPage({
 
   const sp = await searchParams;
   const emailReady = isEmailConfigured();
+  let previewCode: string | null = null;
+
+  if (!emailReady) {
+    previewCode = await getActiveVerificationCodeForPreview(session.user.id);
+    if (!previewCode) {
+      const issued = await issueEmailVerificationToken({
+        userId: session.user.id,
+        name: session.user.name,
+        email: session.user.email,
+      });
+      previewCode = issued.code;
+    }
+  }
 
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
@@ -40,17 +54,20 @@ export default async function VerifyEmailPage({
             </div>
           )}
 
-          {!emailReady && (
-            <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-3.5 text-xs leading-relaxed text-amber-900">
-              <strong>Info Admin Server:</strong> Pengiriman email otomatis belum dikonfigurasi di file{" "}
-              <code>.env</code> (<code>RESEND_API_KEY</code> atau <code>SMTP_HOST</code> masih kosong). Kode verifikasi
-              dapat dilihat pada log container (<code>docker logs dibantudigital-app</code>) atau silakan masuk
-              menggunakan tombol <strong>Google</strong>.
+          {!emailReady && previewCode && (
+            <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4 text-xs leading-relaxed text-amber-900">
+              <p className="font-semibold">Mode Preview (SMTP Email belum diisi di .env):</p>
+              <p className="mt-1">
+                Gunakan kode verifikasi 6 digit berikut untuk langsung mengaktifkan akun Anda:
+              </p>
+              <div className="mt-2 rounded-lg bg-white py-2 text-center font-mono text-2xl font-extrabold tracking-[0.35em] text-slate-900 shadow-2xs">
+                {previewCode}
+              </div>
             </div>
           )}
 
           <div className="mt-8">
-            <VerifyEmailForm />
+            <VerifyEmailForm defaultCode={previewCode ?? undefined} />
           </div>
 
           <form action={logoutAction} className="mt-6 text-center">
@@ -78,4 +95,3 @@ export default async function VerifyEmailPage({
     </div>
   );
 }
-

@@ -14,6 +14,11 @@ const EnvSchema = z.object({
    * so a leaked access token cannot be used from outside this server.
    */
   META_APP_SECRET: z.string().optional().default(""),
+  /**
+   * Configuration ID from "Facebook Login for Business → Konfigurasi" (Business-type apps).
+   * When set, the OAuth dialog uses `config_id` instead of `scope`.
+   */
+  META_LOGIN_CONFIG_ID: z.string().optional().default(""),
   /** Google OAuth 2.0 Client credentials (console.cloud.google.com). */
   GOOGLE_CLIENT_ID: z.string().optional().default(""),
   GOOGLE_CLIENT_SECRET: z.string().optional().default(""),

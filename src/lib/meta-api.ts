@@ -577,3 +577,47 @@ export async function fetchMetaAccountInsights(params: {
 
   return { rows };
 }
+// ----- Additional helper functions for Business / Page selection -----
+/** List Facebook Business accounts the user has access to */
+export async function listMetaBusinesses(accessToken: string): Promise<Array<{ id: string; name: string }>> {
+  const data = await graphGet<Array<{ id: string; name: string }>>(
+    "me/businesses",
+    accessToken,
+    { fields: "id,name" },
+  );
+  // graphGet returns the raw object, but for list we use GraphPaged; using graphGetAll for pagination safety
+  // Simpler: reuse graphGetAll with paging
+  const paged = await graphGetAll<{ id: string; name: string }>(
+    "me/businesses",
+    accessToken,
+    { fields: "id,name" },
+  );
+  return paged;
+}
+
+/** List Pages owned by a specific Business */
+export async function listBusinessPages(businessId: string, accessToken: string): Promise<Array<{ id: string; name: string }>> {
+  const paged = await graphGetAll<{ id: string; name: string }>(
+    `${businessId}/owned_pages`,
+    accessToken,
+    { fields: "id,name" },
+  );
+  return paged;
+}
+
+/** List Ad Accounts belonging to a Page (or Business) */
+export async function listAdAccounts(parentId: string, accessToken: string): Promise<Array<{ id: string; name: string }>> {
+  const paged = await graphGetAll<{ id: string; name: string }>(
+    `${parentId}/adaccounts`,
+    accessToken,
+    { fields: "id,name" },
+  );
+  return paged;
+}
+
+// Export helpers for UI (optional)
+export const metaHelpers = {
+  listMetaBusinesses,
+  listBusinessPages,
+  listAdAccounts,
+};

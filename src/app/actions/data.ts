@@ -412,10 +412,12 @@ export async function syncMetaNowAction(
       return { error: "Maksimal rentang sinkronisasi 93 hari per tarikan. Pecah menjadi beberapa periode." };
     }
 
-    const wait = throttle(`sync:${ctx.workspace.id}`, 60_000);
+    const wait = throttle(`sync:${ctx.workspace.id}`, 10_000);
     if (wait > 0) {
       return { error: `Sinkronisasi baru saja dijalankan. Coba lagi dalam ${wait} detik.` };
     }
+
+    const replaceExisting = formData.get("replaceExisting") === "on";
 
     const connRows = await db()
       .select()
@@ -455,6 +457,7 @@ export async function syncMetaNowAction(
       accountName: conn.adAccountName,
       source: "meta_api",
       rows,
+      replaceExisting,
     });
 
     await db()

@@ -208,7 +208,19 @@ export function SyncMetaNowForm({
           />
         </div>
       </div>
-      <p className="text-[11px] text-slate-500">Maksimal 93 hari per tarikan · jeda minimal 60 detik antar sinkronisasi.</p>
+      <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-xs text-slate-700">
+        <input
+          type="checkbox"
+          name="replaceExisting"
+          defaultChecked
+          className="mt-0.5 size-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+        />
+        <span>
+          <strong>Bersihkan data contoh / data lama</strong> saat sinkronisasi agar angka di Dashboard 100% hanya berasal dari Ad Account Meta ini.
+        </span>
+      </label>
+
+      <p className="text-[11px] text-slate-500">Maksimal 93 hari per tarikan.</p>
 
       <SubmitButton>Tarik Data dari Meta API Sekarang</SubmitButton>
     </form>

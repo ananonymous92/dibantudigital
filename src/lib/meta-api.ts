@@ -104,7 +104,7 @@ function toFriendlyError(err: GraphErrorBody["error"], status: number): MetaApiE
   }
   if (code === 10 || code === 200 || code === 294 || (code !== undefined && code >= 200 && code < 300)) {
     return new MetaApiError(
-      "Token tidak memiliki izin ke Ad Account ini. Pastikan System User sudah di-assign ke Ad Account dengan izin 'ads_read'.",
+      `Izin akses ke Ad Account ini ditolak oleh Meta (Kode #${code}: ${raw}). Silakan klik tombol "Hubungkan Ulang via Facebook" agar izin 'read_insights' & 'ads_read' diperbarui, atau pilih Ad Account lain pada dropdown.`,
       code,
     );
   }
@@ -344,7 +344,7 @@ export async function listMetaAdAccounts(accessToken: string): Promise<MetaAdAcc
   });
 }
 
-/** Build the official Facebook Login OAuth URL requesting read-only `ads_read` permission. */
+/** Build the official Facebook Login OAuth URL requesting read-only `ads_read` and `read_insights` permissions. */
 export function buildMetaOAuthDialogUrl(params: {
   redirectUri: string;
   state: string;
@@ -353,7 +353,8 @@ export function buildMetaOAuthDialogUrl(params: {
   const url = new URL(`https://www.facebook.com/${META_GRAPH_VERSION}/dialog/oauth`);
   url.searchParams.set("client_id", META_APP_ID);
   url.searchParams.set("redirect_uri", params.redirectUri);
-  url.searchParams.set("scope", "ads_read");
+  url.searchParams.set("scope", "ads_read,read_insights,business_management");
+  url.searchParams.set("auth_type", "rerequest");
   url.searchParams.set("response_type", "code");
   url.searchParams.set("state", params.state);
   return url.toString();
@@ -513,11 +514,16 @@ export async function fetchMetaAccountInsights(params: {
     const impressions = Math.round(Number(item.impressions ?? 0));
     const reach = Math.round(Number(item.reach ?? 0));
     const clicks = Math.round(Number(item.clicks ?? 0));
-    const linkClicks = Math.round(Number(item.inline_link_clicks ?? clicks));
+    const linkClicks = Math.round(
+      item.inline_link_clicks !== undefined
+        ? Number(item.inline_link_clicks)
+        : findActionValue(item.actions, ["link_click"]),
+    );
 
     const messages = Math.round(
       findActionValue(item.actions, [
         "onsite_conversion.messaging_conversation_started_7d",
+        "onsite_conversion.messaging_first_reply",
         "onsite_conversion.total_messaging_connection",
         "lead",
       ]),

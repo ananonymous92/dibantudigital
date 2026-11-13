@@ -344,7 +344,7 @@ export async function listMetaAdAccounts(accessToken: string): Promise<MetaAdAcc
   });
 }
 
-/** Build the official Facebook Login OAuth URL requesting read-only `ads_read` and `read_insights` permissions. */
+/** Build the official Facebook Login OAuth URL requesting read-only `ads_read` permission. */
 export function buildMetaOAuthDialogUrl(params: {
   redirectUri: string;
   state: string;
@@ -353,8 +353,7 @@ export function buildMetaOAuthDialogUrl(params: {
   const url = new URL(`https://www.facebook.com/${META_GRAPH_VERSION}/dialog/oauth`);
   url.searchParams.set("client_id", META_APP_ID);
   url.searchParams.set("redirect_uri", params.redirectUri);
-  url.searchParams.set("scope", "ads_read,read_insights,business_management");
-  url.searchParams.set("auth_type", "rerequest");
+  url.searchParams.set("scope", "ads_read");
   url.searchParams.set("response_type", "code");
   url.searchParams.set("state", params.state);
   return url.toString();
